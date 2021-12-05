@@ -66,22 +66,6 @@ struct LineIterator {
 impl Iterator for LineIterator {
     type Item = Point;
 
-    /*
-     (6, 4) -> (2, 0)
-     (6, 4)
-     m = (y2 - y1) / (x2 - x1) [slope]
-     m = -4 / -4 = 1
-     (6, 4) + m(1,1)
-     (x(t), y(t)) = (6 - t, 4 - t)
-     (6,4) -> 5,3 -> 4,2 -> 3,1 -> 2,0
-
-     (9,4) -> (3,4)
-     (xt, yt) = (9 - t, 4)
-
-     (5,5) -> (8,2)
-     (xt, yt) = (5 + t, 5 - t)
-    */
-
     fn next(&mut self) -> Option<Self::Item> {
         if self.completed {
             return None;
@@ -89,15 +73,12 @@ impl Iterator for LineIterator {
         if self.position == self.line.1 {
             self.completed = true;
         }
-        // only works for horizontal and vertical lines
+        // this will not work in the general case, but mercifully all lines that
+        // we need to deal with in this problem have a slope of either -1, 0, or
+        // 1, which this approach *is* sufficient for.
         let mut next = self.position.clone();
-        if self.line.horizontal() {
-            next.0 += self.line.horizontal_slope().signum();
-        } else if self.line.vertical() {
-            next.1 += self.line.vertical_slope().signum();
-        } else {
-            unimplemented!()
-        }
+        next.0 += self.line.horizontal_slope().signum();
+        next.1 += self.line.vertical_slope().signum();
         let to_return = self.position.clone();
         self.position = next;
         Some(to_return)
@@ -113,7 +94,7 @@ impl Grid {
             match self.0.entry(point) {
                 Entry::Occupied(mut e) => *e.get_mut() += 1,
                 Entry::Vacant(e) => {
-                    let _ = *e.insert(1);
+                    let _ = e.insert(1);
                 }
             }
         }
@@ -141,4 +122,16 @@ fn part1() {
     let ans = grid.intersections().len();
     println!("Day 5, part 1: {}", ans);
     assert_eq!(6710, ans);
+}
+
+#[test]
+fn part2() {
+    let lines: Vec<_> = INPUT.lines().map(Line::parse).collect();
+    let mut grid = Grid::default();
+    for line in &lines {
+        grid.update(line);
+    }
+    let ans = grid.intersections().len();
+    println!("Day 5, part 2: {}", ans);
+    assert_eq!(20121, ans);
 }
