@@ -135,21 +135,20 @@ impl<'a> Graph<'a> for MultiVisitGraph<'a> {
     }
 }
 
-/// `'v` is the lifetime of the vertex container, `'id` is the lifetime of the
-/// string which makes up its identifier. Realistically this is static but I
-/// don't want to prescribe that in the struct definition.
+// the vertex container and the underlying &str have different lifetimes, but
+// I'm not sure whether that distinction is worth making here.
 #[derive(Debug)]
-struct Node<'v, 'id> {
-    vertex: &'v Vertex<'id>,
-    visited: Vec<&'v Vertex<'id>>,
+struct Node<'v> {
+    vertex: &'v Vertex<'v>,
+    visited: Vec<&'v Vertex<'v>>,
 }
 
-impl<'v, 'id> Node<'v, 'id> {
+impl<'v> Node<'v> {
     fn compute(
-        vertex: &'v Vertex<'id>,
-        parent: Option<&Node<'v, 'id>>,
-        graph: &'v impl Graph<'id>,
-    ) -> (Node<'v, 'id>, u32) {
+        vertex: &'v Vertex<'v>,
+        parent: Option<&Node<'v>>,
+        graph: &'v impl Graph<'v>,
+    ) -> (Node<'v>, u32) {
         // the "path" for this node is the path of the parent plus the parent
         // itself. (or an empty path if no parent)
         let visited = match parent {
